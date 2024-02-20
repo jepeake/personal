@@ -1,5 +1,73 @@
 ---
 title: "Analysis of Apple's M3 GPU Architecture"
-date: 2023-11-30
+date: 2023-12-30
 draft: false
 ---
+
+The Apple M3, M3 Pro, & M3 Max chips were released by Apple on October 30 2023 - featuring a next-generation GPU architecture. This post will analyse the introduced architectural changes.
+
+The M3 GPU Architecture introduced 3 notable features: **a Next Generation Shader Core**, **Hardware-Accelerated Ray-Tracing**, & **Hardware-Accelerated Mesh-Shading**.
+
+# Next Generation Shader Core
+
+Apple's GPU Architecture consists of many key components, including: Compute & Vertex Command Processors to parse command buffers, a Rasterizer to dispatch fragment shaders for execution, a GPU Last Level Cache to service all GPU memory traffic, and many Shader Cores, Texture Units, and Raytracing Units. The Shader Cores are the main execution units & can execute thousands of threads in parallel, leading to tens of thousands of threads executing in parallel across the GPU. 
+
+The Shader Core itself includes: ALU Pipelines (FP32, FP16, Integer, & Complex), Memory Pipelines (Texture Access & Buffer Access), a SIMDgroup pool (keeps track of SIMDgroups that are running on a shader core), a SIMDgroup scheduler (chooses which SIMDgroup to run), and On-Chip Memory (a Register File, Threadgroup & Tile Memory, & Buffer/Stack Cache). Threads are organised into Threadgroups which are executed together & share a common block of memory, these Threadgroups are then further organised into SIMDgroups which contains threads that execute concurrently & execute the same code.
+
+The next-generation Shader Core introduces three main improvements: **Dynamic Shader Core Memory**, **Flexible On-Chip Memory**, & **High-Performance ALUs**.
+
+### Dynamic Shader Core Memory
+
+Dynamic Shader Core Memory provides dynamic allocation & deallocation of on-chip register memory over the lifetime of the shader, according to what each part of the program actually uses.
+
+Compute Kernels running on a Shader Core utilise more or fewer registers depending on the point in program execution. Without Dynamic Shader Core Memory (Static Allocation), the amount of allocated registers to a SIMDgroup from the on-chip register file would be equal to the maximum register usage at any point in the program. The SIMDgroup would keep that number of registers allocated for the entire duration of the SIMDgroup - even though most of those registers would go unused in large sections of the program.
+
+With Dynamic Shader Core Memory, the maximum register usage no longer dictates how many SIMDgroups can be run. The number of registers allocated at each point in program execution is the number of registers a SIMDgroup requires at that point. This allows SIMDgroups to make much more efficient use of the on-chip register file & frees up space that would not have been available otherwise. This allows much more SIMDgroups to run concurrently & greatly increases thread occupancy.
+
+To allow dynamic allocation of registers, the Register File is now a cache, rather than permanent storage for registers, meaning more registers can be used than can be stored on-chip.
+
+*Thread Occupancy is a measure of how many of the available SIMDgroups are being utilised at any given time. A GPU has a maximum number of SIMDgroups that it can execute at any given time, & occupancy is a measure of how much of this capacity the GPU is using. Thread occupancy can be limited by many factors, such as: number of registers each SIMDgroup requires, amount of shared memory per Shader Core, & maximum number of threads per Shader Core.*
+
+### Flexible On-Chip Memory
+
+In addition to the Register File being implemented as a cache, Flexible On-Chip Memory introduces the implementation of all on-chip memory types as cache (incl. Threadgroup & Tile Memory, Buffer & Stack). This implementation allows a redesign of all of the on-chip memories into fewer larger caches that service all memory types. The larger cache structures can dynamically assign to the memory types used by a program, providing flexibility that benefits shaders that do not make heavy use of each memory type. As most programs don't use all memory types, more space becomes available for the memory types that are used. 
+
+If a shader has heavy register usage, it will have more registers available & so more SIMDgroups may be able to execute at a given time, leading to higher thread occupancy. If a shader repeatedly accesses a large working set in the buffer data, it may receive higher cache hit rates & lower buffer access latency, therefore providing better performance. If an app makes heavy-use of non-inline functions, they will have more on-chip stack space to pass function parameters, & therefore faster function calls.
+
+If an app uses more memory than is available on-chip, the Shader Core dynamically monitors & adjusts the occupancy level to prevent data spilling into the next cache level/main memory. This ensures data remains on-chip & execution pipelines remain occupied.
+
+### High Performance ALUs
+
+The new GPU Architecture also provides High Performance ALUs, with an increased ability to execute ALUs in parallel. 
+
+Previously, if two SIMDgroups running concurrently & both executing ALU instructions, SIMDgroups may have to run one after another. Now, if they have FP32 & FP16 instructions to execute at different pointer in time - their executions can be overlapped - increasing parallelism & performance.
+
+This higher occupancy improves ALU Utilisation, & improves performance for programs that perform combinations of integer/FP32/FP16 operations.
+
+# Hardware-Accelerated Ray-Tracing
+
+A key part of Apple's Metal Ray Tracing API is the intersector object. This object is responsible for determining the intersection point of a ray with the primitives contained in an acceleration structure. This object is invoked many times & is central to Ray-Tracing Performance.
+
+The new GPU Architecture implements hardware-acceleration of the intersector object, greatly increasing the performance of the intersector operation. This hardware-accelerated intersection does not execute inline with the GPU function, & instead reads & writes data to an on-chip memory which facilities communication of the ray & payload between the GPU function & intersector.
+
+Without hardware-acceleration, the traversal operation performed by the intersector object may take varying amounts of time for different threads. This creates execution divergence in the SIMDgroup, as each thread in the SIMDgroup must wait for the longest traversal from that SIMDgroup before proceeding to the next stage. This overhead compounds as the execution divergence causes each intersection function to run one after another, reducing parallelism. This leads to a major performance bottleneck, as each thread spends a large amount of runtime idle & waits on other threads in SIMDgroup to complete.
+
+Implementing hardware-acceleration, each hardware intersector is able to run each traversal completely independently using fixed function hardware. This is possible as the rays are sent to the hardware intersector for processing rather than executing inline with the GPU function, greatly decreasing the time spend traversing & removing overhead of execution divergence.
+
+As the hardware intersector executes each ray independently, it is free to group together the intersection calls from rays that originated in separate SIMDgroups, using the reorder stage. When the rays reach this stage within close proximity & time, the intersection function calls will be grouped into coherent SIMDgroups, such that the execution divergence overhead present in the traditional implementation is reduced or eliminated.
+
+# Hardware Accelerated Mesh-Shading
+
+The traditional vertex shader stage of the GPU has been replaced by a flexible, GPU-driven processing stage in the rendering pipeline, to perform Mesh-Shading. The first stage is the object shaders, which can be used to perform course-grain processing of app-specific inputs such as entire mesh objects. The second stage is the mesh shaders, which can subsequently perform finer-grain processing.
+
+These two hardware-accelerated stages combine to improvement mesh-shading performance. By scheduling object & mesh threadgroups much more efficiently across mesh stages & keeping intermediate meshlet data on-chip, the implementation greatly reduces memory traffic, & allows more mesh shading operations to run simultaneously. This implementation also enables apps to customise their geometry processing pipeline to their needs - optimising performance to their needs.
+
+# Summary
+
+Apple's M3 GPU Architecture introduces a Next Generation Shader Core, Hardware-Accelerated Ray-Tracing, & Hardware-Accelerated Mesh-Shading to improve performance.
+
+The next-generation shader core increases on-chip memory utilisation for better thread occupancy & performance by dynamically allocating register storage & sharing on-chip memory across many memory types.
+
+Hardware-Accelerated Ray-Tracing greatly improves performance of apps using the Metal Ray Tracing APIs & Hardware-Accelerated Mesh-Shading greatly improves mesh shading performance, by reducing memory traffic & enabling more apps to customise their geometry processing pipeline.
+
+The significant focus of this architecture is **improving thread occupancy by implementing a dynamically allocated on-chip memory that is more efficient & improves utilisatation.** This solution is efficient & scalable to future architectures that may come in the M4, M5, and so on. This architecture is claimed to provide a **+65% improvement** in peak GPU performance over the M1 series.
