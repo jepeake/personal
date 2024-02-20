@@ -1,6 +1,6 @@
 const CONFIG = {
-    title: "Lotse",
-    baseURL: "https://lotse.vercel.app",
+    title: "Jacob Peake",
+    baseURL: "https://jepke.me",
     darkBackground: "#1a1a1a",
 };
 
