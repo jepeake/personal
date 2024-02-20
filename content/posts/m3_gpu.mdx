@@ -8,7 +8,7 @@ The Apple M3, M3 Pro, & M3 Max chips were released by Apple on October 30 2023 -
 
 The M3 GPU Architecture introduced 3 notable features: **a Next Generation Shader Core**, **Hardware-Accelerated Ray-Tracing**, & **Hardware-Accelerated Mesh-Shading**.
 
-# Next Generation Shader Core
+## Next Generation Shader Core
 
 Apple's GPU Architecture consists of many key components, including: Compute & Vertex Command Processors to parse command buffers, a Rasterizer to dispatch fragment shaders for execution, a GPU Last Level Cache to service all GPU memory traffic, and many Shader Cores, Texture Units, and Raytracing Units. The Shader Cores are the main execution units & can execute thousands of threads in parallel, leading to tens of thousands of threads executing in parallel across the GPU. 
 
@@ -44,7 +44,7 @@ Previously, if two SIMDgroups running concurrently & both executing ALU instruct
 
 This higher occupancy improves ALU Utilisation, & improves performance for programs that perform combinations of integer/FP32/FP16 operations.
 
-# Hardware-Accelerated Ray-Tracing
+## Hardware-Accelerated Ray-Tracing
 
 A key part of Apple's Metal Ray Tracing API is the intersector object. This object is responsible for determining the intersection point of a ray with the primitives contained in an acceleration structure. This object is invoked many times & is central to Ray-Tracing Performance.
 
@@ -62,7 +62,7 @@ The traditional vertex shader stage of the GPU has been replaced by a flexible, 
 
 These two hardware-accelerated stages combine to improvement mesh-shading performance. By scheduling object & mesh threadgroups much more efficiently across mesh stages & keeping intermediate meshlet data on-chip, the implementation greatly reduces memory traffic, & allows more mesh shading operations to run simultaneously. This implementation also enables apps to customise their geometry processing pipeline to their needs - optimising performance to their needs.
 
-# Summary
+## Summary
 
 Apple's M3 GPU Architecture introduces a Next Generation Shader Core, Hardware-Accelerated Ray-Tracing, & Hardware-Accelerated Mesh-Shading to improve performance.
 
