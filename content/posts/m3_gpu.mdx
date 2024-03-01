@@ -56,7 +56,7 @@ Implementing hardware-acceleration, each hardware intersector is able to run eac
 
 As the hardware intersector executes each ray independently, it is free to group together the intersection calls from rays that originated in separate SIMDgroups, using the reorder stage. When the rays reach this stage within close proximity & time, the intersection function calls will be grouped into coherent SIMDgroups, such that the execution divergence overhead present in the traditional implementation is reduced or eliminated.
 
-# Hardware Accelerated Mesh-Shading
+## Hardware Accelerated Mesh-Shading
 
 The traditional vertex shader stage of the GPU has been replaced by a flexible, GPU-driven processing stage in the rendering pipeline, to perform Mesh-Shading. The first stage is the object shaders, which can be used to perform course-grain processing of app-specific inputs such as entire mesh objects. The second stage is the mesh shaders, which can subsequently perform finer-grain processing.
 
