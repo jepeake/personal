@@ -1,0 +1,31 @@
+---
+title: "Pathfinder"
+date: 2023-11-30
+draft: false
+---
+
+### Overview
+
+Designed an Autonomous Pathfinding Robot - to autonomously navigate, map, and calculate the shortest path through a maze.
+
+### Navigation
+
+To navigate the maze - the Robot used an DE10-Lite FPGA + Camera Module to perform real-time image processing. The feed from the Camera Module was passed to the FPGA board, which was programmed in SystemVerilog to perform image processing and act as a Vision System. The Vision System would use colour-detection to detect the white maze markings in the bottom half of the frame, and the coloured beacons surrounding the maze in the top half of the frame.
+
+The Robot would then traverse the entirety of the maze - following the left wall, until it reach a point it had already traversed, at which point the server would communicate to command it to follow the right wall.
+
+### Map
+
+To Map the Maze - the Robot must be capable of determining the position in the maze - using a combination of dead-reckoning and vision.
+
+IMU Orientation Values & Wheel Rotation Encodings could be fused into a Complementary Filter which produced an accurate determination of the position. This was used in combination with position detection by triangulating position from the coloured beacons. With a coloured beacon in each corner of the maze - the pixel width could be measured to determine it's distance, applying a triangulation algorithm to calibrate the dead-reckoning position periodically.
+
+This position information could then be sent to the server - which could store the position values in a database structure - and send the values to a Host PC. The PC could then display the values on a user-interface, displaying to the user the layout of the maze.
+
+### Shortest Path
+
+The Shortest Path could then be determined using Dijkstra's Algorithm - placing a node at each intersection point of the maze - and determining the shortest path from start node to end node.
+
+### Repository
+
+https://github.com/jepeake/Pathfinder
