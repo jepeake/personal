@@ -1,13 +1,24 @@
 ---
-title: "Designing a RISC-V CPU"
+title: "Designing a RISC-V CPU Microarchitecture"
 date: 2022-12-01
 draft: false
 ---
 
-As part of the Imperial College London Instruction Architecture & Compilers Course - a multi-stage pipelined RISC-V CPU was implemented as a group project. This project taught the RISC-V Instruction Set Architecture, Microarchitecture Design, Pipelining, Hazard Units, Data Cache, & Verification of Hardware Designs.
+### Overview
 
-The Group first implemented a simple Single-Cycle RISC-V 32I Design - which implemented most of the RV32I Instructions - including Jump and Link (JAL) such that subroutines could be performed. Then, this was extended by adding pipelining to the design, enabling multiple instructions to execute simultaneously. Data and Control Hazards could be dealt with in software by identifying and inserting NOPs. Then, to increase complexity, data cache was implemented.
+As part of the Imperial College Instruction Architectures & Compilers course, one group project was to implement a multi-stage, pipelined, RISC-V CPU.
+This introduces the RISC-V Instruction Set Architecture, Microarchitecture Design, Pipelining, Hazard Units, Data Cache, & Verification of Hardware Design.
 
-For this project - I was responsible for implementing the ALU, Data Memory, Register File, CPU and Data Cache Modules. These modules were written in SystemVerilog, and then testbenches written in C++. In the ALU, an enumerated type was used to characterise all of the ALU operations as numbers corresponding to the value of the ALU control signal. Then, a combinational logic statement defined the operations for each case. For Data Memory, memory was defined with respect to a mapping given in the project brief. On the positive edge of the clock, if write enable = 1, then data is written to memory at the specified address. For this CPU, this is done with byte-addressing.
+First - a simple single-cycle RISC-V 32I Microarchitecture was developed, implementing most of the RV32I Instruction Set, including Jump And Link (JAL) to perform subroutines.
+Then, this was extended by adding pipelining to the design, enabling multiple instructions to execute simultaneously.
+Data & Control Hazards must be dealt with in software, identifying & inserting NOPs.
+To increase complexity, data cache could then be implemented.
+
+### Responsibilities
+
+I took the responsibility of implementing the ALU, Data Memory, Register File, CPU, & Data Cache.
+These modules can be written in SystemVerilog, then writing testbenches in C++ to verify the designs.
+In the ALU, an enumerated type was used to characterise all of the ALU operations as numbers corresponding to the value of the ALU control signal.
+Then, a combinational logic statement defined the operations for each case. For Data Memory, memory was defined with respect to a mapping given in the project brief. On the positive edge of the clock, if write enable = 1, then data is written to memory at the specified address. For this CPU, this is done with byte-addressing.
 
 For the Register File, it had the functionality to simply pass the values at address ad1 and ad2 to outputs rd1 and rd2 to read data from the registers - and if write enable = 1, then value of wd3 written to register at address ad3. The CPU module is a SV Structural Module, that connects each of the RTL components together. It defines the intput/output logic, interconnecting wires and instances of the behavioural modules that have been previously defined.
