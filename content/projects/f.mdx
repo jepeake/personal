@@ -1,0 +1,30 @@
+---
+title: "C-to-RISCV Compiler"
+date: 2023-11-30
+draft: false
+---
+
+### Overview
+
+Designed a C Compiler that takes preprocessed ANSI-C as the source language & produces RISC-V assembly as the target language.
+
+Lexer: C++ & Flex
+Defines a list of Regular Expressions & Associated Actions which tokenise the source code and produce a stream of tokens.
+
+Flex (Fast Lexical Analyser Generator): Open-Source Alternative to Lex
+When a Flex input file is provided with Regular Expressions & Corresponding Actions - Flex generates a C++ program that performs tokenisation based on those rules.
+
+Parser: C++ & Bison
+Analyses the stream of tokens and formulates an Abstract Syntax Tree.
+
+Bison - GNU Implementation of Yacc
+Bison is a general-purpose parser generator that converts an annotated context-free grammar into a parser table.
+
+Careful consideration was taken in how the program would create this AST - with a grammar being defined from which a shift-reduce Parser could be generated.
+
+Code Generation:
+Once the AST is generated - the nodes can be analysed to generate the corresponding RISC-V assembly
+
+### Repository
+
+https://github.com/jepeake/C-to-RISCV-Compiler
