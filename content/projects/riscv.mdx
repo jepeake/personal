@@ -22,3 +22,7 @@ In the ALU, an enumerated type was used to characterise all of the ALU operation
 Then, a combinational logic statement defined the operations for each case. For Data Memory, memory was defined with respect to a mapping given in the project brief. On the positive edge of the clock, if write enable = 1, then data is written to memory at the specified address. For this CPU, this is done with byte-addressing.
 
 For the Register File, it had the functionality to simply pass the values at address ad1 and ad2 to outputs rd1 and rd2 to read data from the registers - and if write enable = 1, then value of wd3 written to register at address ad3. The CPU module is a SV Structural Module, that connects each of the RTL components together. It defines the intput/output logic, interconnecting wires and instances of the behavioural modules that have been previously defined.
+
+### Repository
+
+https://github.com/jepeake/RISCV-CPU
